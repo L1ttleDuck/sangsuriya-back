@@ -1,5 +1,5 @@
 import { LineBotClient } from '@line/bot-sdk'
-import { readFileSync } from 'node:fs'
+import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 const channelAccessToken = process.env.LINE_CHANNEL_ACCESS_TOKEN || ''
@@ -13,11 +13,11 @@ const defaultRichMenu: any = {
   areas: [
     {
       bounds: { x: 156, y: 777, width: 1076, height: 746 },
-      action: { type: 'uri', uri: 'https://6396-223-205-216-182.ngrok-free.app/register' },
+      action: { type: 'uri', uri: process.env.LIFF_REGISTER_URL || 'https://liff.line.me/2010700498-S81OqCge' },
     },
     {
       bounds: { x: 1249, y: 781, width: 1060, height: 742 },
-      action: { type: 'message', text: 'ราคาทอง' },
+      action: { type: 'message', text: 'ราคาทองวันนี้' },
     },
   ],
 }
@@ -56,8 +56,33 @@ async function uploadImage(richMenuId: string, filename: string) {
   console.log('  Image uploaded')
 }
 
+async function deleteAllRichMenus() {
+  const list = await client.getRichMenuList()
+  if (!list.richmenus || list.richmenus.length === 0) {
+    console.log('No existing rich menus to delete')
+    return
+  }
+  for (const menu of list.richmenus) {
+    console.log(`  Deleting ${menu.richMenuId} (${menu.name})...`)
+    await client.deleteRichMenu(menu.richMenuId)
+  }
+  console.log(`Deleted ${list.richmenus.length} old rich menu(s)`)
+}
+
+function updateEnv(defaultId: string, memberId: string) {
+  const envPath = join(process.cwd(), '.env')
+  let env = readFileSync(envPath, 'utf-8')
+  env = env.replace(/RICH_MENU_ID_DEFAULT=.*/, `RICH_MENU_ID_DEFAULT=${defaultId}`)
+  env = env.replace(/RICH_MENU_ID_MEMBER=.*/, `RICH_MENU_ID_MEMBER=${memberId}`)
+  writeFileSync(envPath, env)
+  console.log('.env updated automatically')
+}
+
 async function main() {
-  console.log('=== Creating Default Rich Menu ===')
+  console.log('=== Cleaning up old rich menus ===')
+  await deleteAllRichMenus()
+
+  console.log('\n=== Creating Default Rich Menu ===')
   const defaultRes = await client.createRichMenu(defaultRichMenu)
   console.log(`Created: ${defaultRes.richMenuId}`)
   await uploadImage(defaultRes.richMenuId, 'richmenu-default.png')
@@ -71,10 +96,12 @@ async function main() {
   console.log(`Created: ${memberRes.richMenuId}`)
   await uploadImage(memberRes.richMenuId, 'richmenu-member.png')
 
+  console.log('\n=== Updating .env ===')
+  updateEnv(defaultRes.richMenuId, memberRes.richMenuId)
+
   console.log('\n=== Done ===')
-  console.log(`Default Rich Menu ID: ${defaultRes.richMenuId}`)
-  console.log(`Member Rich Menu ID: ${memberRes.richMenuId}`)
-  console.log(`\nAdd to .env: RICH_MENU_ID_MEMBER=${memberRes.richMenuId}`)
+  console.log(`Default: ${defaultRes.richMenuId}`)
+  console.log(`Member:  ${memberRes.richMenuId}`)
 }
 
 main().catch(console.error)

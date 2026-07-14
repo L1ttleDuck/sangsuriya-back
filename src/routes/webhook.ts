@@ -51,6 +51,8 @@ async function handleEvent(event: Event) {
 
   if (text === 'ราคาทอง' || text.toLowerCase() === 'gold price') {
     await replyFlexCarousel(replyToken)
+  } else if (text === 'ราคาทองวันนี้') {
+    await replyGoldPriceImage(replyToken)
   } else if (text === 'ลงทะเบียน' || text.toLowerCase() === 'register') {
     await replyRegisterLink(replyToken)
   } else if (text === 'สลับ') {
@@ -119,6 +121,22 @@ async function toggleRichMenu(replyToken: string, event: Event) {
       messages: [{ type: 'text', text: 'สลับเมนูไม่สำเร็จ' }],
     })
   }
+}
+
+async function replyGoldPriceImage(replyToken: string) {
+  const baseUrl = process.env.PUBLIC_API_BASE_URL || 'http://localhost:5001'
+  const imageUrl = `${baseUrl}/static/gold-price.png`
+
+  await lineClient.replyMessage({
+    replyToken,
+    messages: [
+      {
+        type: 'image',
+        originalContentUrl: imageUrl,
+        previewImageUrl: imageUrl,
+      },
+    ],
+  })
 }
 
 async function replyFlexBubble(replyToken: string) {
