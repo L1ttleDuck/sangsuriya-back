@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ลงทะเบียน - ร้านทอง แสงสุริยา</title>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, 'Segoe UI', sans-serif; background: #0b0b1a; color: #e0e0e0; min-height: 100vh; }
+.container { max-width: 480px; margin: 0 auto; padding: 20px; }
+.header { text-align: center; padding: 24px 0 16px; }
+.header h1 { font-size: 22px; color: #D4AF37; }
+.header p { font-size: 14px; color: #888; margin-top: 6px; }
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; font-size: 13px; color: #aaa; margin-bottom: 6px; }
+.form-group input { width: 100%; padding: 12px 14px; border: 1px solid #333; border-radius: 10px; background: #1a1a2e; color: #e0e0e0; font-size: 15px; }
+.form-group input:focus { outline: none; border-color: #D4AF37; }
+.form-group input::placeholder { color: #555; }
+.btn-submit { width: 100%; padding: 14px; border: none; border-radius: 12px; background: linear-gradient(135deg, #D4AF37, #F0D060); color: #1a1a2e; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 12px; }
+.btn-submit:hover { opacity: 0.9; }
+.btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+.error { color: #ff6b6b; font-size: 13px; margin-top: 8px; display: none; }
+.success { text-align: center; padding: 40px 20px; }
+.success h2 { color: #D4AF37; font-size: 20px; margin-bottom: 12px; }
+.success p { color: #aaa; font-size: 14px; }
+.loading { text-align: center; padding: 40px; color: #888; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>ลงทะเบียนสมาชิก</h1>
+    <p>ร้านทอง แสงสุริยา</p>
+  </div>
+
+  <div id="formView">
+    <div class="form-group">
+      <label>ชื่อ</label>
+      <input type="text" id="firstName" placeholder="กรอกชื่อ" required>
+    </div>
+    <div class="form-group">
+      <label>นามสกุล</label>
+      <input type="text" id="lastName" placeholder="กรอกนามสกุล" required>
+    </div>
+    <div class="form-group">
+      <label>เบอร์โทรศัพท์</label>
+      <input type="tel" id="phone" placeholder="08x-xxx-xxxx" required>
+    </div>
+    <div class="form-group">
+      <label>ที่อยู่</label>
+      <input type="text" id="address" placeholder="ที่อยู่ (ถ้ามี)">
+    </div>
+    <div class="error" id="errorMsg"></div>
+    <button class="btn-submit" id="submitBtn" onclick="submitForm()">ลงทะเบียน</button>
+  </div>
+
+  <div id="successView" style="display:none">
+    <div class="success">
+      <h2>ลงทะเบียนสำเร็จ</h2>
+      <p>ขอบคุณที่สมัครสมาชิกกับร้านทอง แสงสุริยา</p>
+    </div>
+  </div>
+
+  <div id="loadingView" style="display:none">
+    <div class="loading">กำลังดำเนินการ...</div>
+  </div>
+</div>
+
+<script>
+let userId = ''
+let lineId = ''
+
+async function initLiff() {
+  try {
+    await liff.init({ liffId: '2010700498-S81OqCge' })
+    if (liff.isLoggedIn()) {
+      const profile = await liff.getProfile()
+      userId = profile.userId
+      lineId = profile.userId
+    }
+  } catch (e) {
+    console.log('LIFF init failed, continuing without login')
+  }
+}
+
+async function submitForm() {
+  const firstName = document.getElementById('firstName').value.trim()
+  const lastName = document.getElementById('lastName').value.trim()
+  const phone = document.getElementById('phone').value.trim()
+  const address = document.getElementById('address').value.trim()
+  const errorMsg = document.getElementById('errorMsg')
+  const btn = document.getElementById('submitBtn')
+
+  if (!firstName || !lastName || !phone) {
+    errorMsg.textContent = 'กรุณากรอกชื่อ นามสกุล และเบอร์โทรศัพท์'
+    errorMsg.style.display = 'block'
+    return
+  }
+
+  errorMsg.style.display = 'none'
+  btn.disabled = true
+  document.getElementById('formView').style.display = 'none'
+  document.getElementById('loadingView').style.display = 'block'
+
+  try {
+    const baseUrl = window.location.origin
+    const res = await fetch(baseUrl + '/api/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, firstName, lastName, phone, lineId, address })
+    })
+
+    if (res.ok) {
+      document.getElementById('loadingView').style.display = 'none'
+      document.getElementById('successView').style.display = 'block'
+    } else {
+      throw new Error('Registration failed')
+    }
+  } catch (err) {
+    document.getElementById('loadingView').style.display = 'none'
+    document.getElementById('formView').style.display = 'block'
+    btn.disabled = false
+    errorMsg.textContent = 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง'
+    errorMsg.style.display = 'block'
+  }
+}
+
+initLiff()
+</script>
+</body>
+</html>

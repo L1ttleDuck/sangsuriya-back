@@ -441,7 +441,7 @@ async function replyImagemap(replyToken: string) {
     messages: [
       {
         type: 'imagemap',
-        baseUrl: `${baseUrl}/static/gold-price`,
+        baseUrl: `${baseUrl}/imagemap/gold-price-v3`,
         altText: 'ออมทอง - คลิกเพื่อเลือกแผนออมทอง',
         baseSize: {
           width: 1040,

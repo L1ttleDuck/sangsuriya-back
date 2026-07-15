@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ร้านทอง แสงสุริยา - Demo</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, 'Segoe UI', sans-serif; background: #0b0b1a; color: #e0e0e0; }
+
+.chat-container { max-width: 420px; margin: 0 auto; min-height: 100vh; background: #2e2e3a; display: flex; flex-direction: column; }
+.chat-header { background: #1a1a2e; padding: 16px; text-align: center; border-bottom: 1px solid #333; position: sticky; top: 0; z-index: 10; }
+.chat-header h1 { font-size: 16px; color: #D4AF37; }
+.chat-header p { font-size: 12px; color: #888; margin-top: 2px; }
+
+.chat-body { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-bottom: 80px; }
+.chat-footer { background: #1a1a2e; padding: 12px; border-top: 1px solid #333; display: flex; gap: 8px; position: sticky; bottom: 0; }
+.chat-footer button { flex: 1; padding: 10px 8px; border: none; border-radius: 20px; font-size: 13px; cursor: pointer; transition: all 0.2s; }
+.btn-gold { background: linear-gradient(135deg, #D4AF37, #F0D060); color: #1a1a2e; font-weight: bold; }
+.btn-gold:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(212,175,55,0.3); }
+.btn-outline { background: transparent; border: 1px solid #D4AF37; color: #D4AF37; }
+.btn-outline:hover { background: rgba(212,175,55,0.1); }
+
+.msg-row { display: flex; }
+.msg-row.bot { justify-content: flex-start; }
+.msg-row.user { justify-content: flex-end; }
+.msg-bubble { max-width: 85%; padding: 12px 16px; border-radius: 18px; font-size: 14px; line-height: 1.5; }
+.msg-row.bot .msg-bubble { background: #3d3d5c; border-bottom-left-radius: 4px; }
+.msg-row.user .msg-bubble { background: #D4AF37; color: #1a1a2e; border-bottom-right-radius: 4px; font-weight: 500; }
+
+/* Flex Bubble */
+.flex-bubble { max-width: 85%; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.3); }
+.flex-header { background: #1a1a2e; padding: 16px 20px; }
+.flex-header h2 { font-size: 18px; color: #D4AF37; font-weight: bold; }
+.flex-header p { font-size: 13px; color: #888; margin-top: 4px; }
+.flex-body { background: #fff; padding: 16px 20px; }
+.flex-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; }
+.flex-row .label { font-size: 14px; color: #333; }
+.flex-row .price { font-size: 14px; color: #D4AF37; font-weight: bold; }
+.flex-sep { height: 1px; background: #eee; margin: 12px 0; }
+.flex-hint { font-size: 12px; color: #999; margin-top: 8px; }
+.flex-footer { background: #fff; padding: 12px 16px; display: flex; gap: 8px; }
+.flex-footer button { flex: 1; padding: 10px; border: none; border-radius: 8px; font-size: 13px; cursor: pointer; }
+.btn-primary { background: #D4AF37; color: #1a1a2e; font-weight: bold; }
+.btn-secondary { background: #f0f0f0; color: #333; }
+
+/* Template Buttons */
+.tpl-card { max-width: 85%; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.3); background: #fff; }
+.tpl-img { width: 100%; height: 180px; object-fit: cover; display: block; }
+.tpl-title { padding: 12px 16px 4px; font-size: 15px; font-weight: bold; color: #333; }
+.tpl-text { padding: 0 16px 8px; font-size: 13px; color: #666; }
+.tpl-actions { padding: 8px 16px 16px; display: flex; flex-direction: column; gap: 6px; }
+.tpl-actions button { padding: 12px; border: none; border-radius: 8px; font-size: 13px; cursor: pointer; background: #f5f5f5; color: #333; text-align: center; }
+.tpl-actions button:hover { background: #e8e8e8; }
+
+/* Imagemap */
+.imagemap-wrap { max-width: 85%; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.3); position: relative; }
+.imagemap-wrap img { width: 100%; display: block; }
+.imagemap-overlay { position: absolute; inset: 0; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+.imagemap-area { cursor: pointer; transition: background 0.2s; }
+.imagemap-area:hover { background: rgba(212,175,55,0.15); }
+.imagemap-label { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); font-size: 11px; color: rgba(255,255,255,0.7); pointer-events: none; }
+
+/* Carousel */
+.carousel-wrap { max-width: 90%; display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+.carousel-card { min-width: 160px; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.3); background: #fff; flex-shrink: 0; }
+.carousel-header { background: #1a1a2e; padding: 10px 12px; }
+.carousel-header h3 { font-size: 13px; color: #D4AF37; font-weight: bold; }
+.carousel-body { padding: 10px 12px; }
+.carousel-row { display: flex; justify-content: space-between; padding: 3px 0; }
+.carousel-row .lbl { font-size: 11px; color: #888; }
+.carousel-row .val { font-size: 13px; color: #D4AF37; font-weight: bold; }
+.carousel-footer { padding: 8px 12px 12px; }
+.carousel-footer button { width: 100%; padding: 8px; border: none; border-radius: 6px; background: #D4AF37; color: #1a1a2e; font-weight: bold; font-size: 12px; cursor: pointer; }
+
+.hidden { display: none; }
+</style>
+</head>
+<body>
+
+<div class="chat-container">
+  <div class="chat-header">
+    <h1>ร้านทอง แสงสุริยา</h1>
+    <p>LINE Official Account Demo</p>
+  </div>
+
+  <div class="chat-body" id="chatBody">
+    <div class="msg-row bot">
+      <div class="msg-bubble">สวัสดีครับ ยินดีต้อนรับสู่ร้านทอง แสงสุริยา เลือกเมนูด้านล่างได้เลยครับ</div>
+    </div>
+  </div>
+
+  <div class="chat-footer">
+    <button class="btn-outline" onclick="sendMsg('ราคาทอง')">ราคาทอง</button>
+    <button class="btn-outline" onclick="sendMsg('ซื้อทอง')">ซื้อทอง</button>
+    <button class="btn-outline" onclick="sendMsg('ผ่อนทอง')">ผ่อนทอง</button>
+    <button class="btn-outline" onclick="sendMsg('ออมทอง')">ออมทอง</button>
+  </div>
+</div>
+
+<script>
+const chatBody = document.getElementById('chatBody')
+
+function scrollBottom() {
+  setTimeout(() => { chatBody.scrollTop = chatBody.scrollHeight }, 50)
+}
+
+function addUserMsg(text) {
+  const row = document.createElement('div')
+  row.className = 'msg-row user'
+  row.innerHTML = `<div class="msg-bubble">${text}</div>`
+  chatBody.appendChild(row)
+  scrollBottom()
+}
+
+function addBotMsg(text) {
+  const row = document.createElement('div')
+  row.className = 'msg-row bot'
+  row.innerHTML = `<div class="msg-bubble">${text}</div>`
+  chatBody.appendChild(row)
+  scrollBottom()
+}
+
+function addFlexBubble() {
+  const row = document.createElement('div')
+  row.className = 'msg-row bot'
+  row.innerHTML = `
+    <div class="flex-bubble">
+      <div class="flex-header">
+        <h2>ร้านทอง แสงสุริยา</h2>
+        <p>สั่งซื้อทองคำ</p>
+      </div>
+      <div class="flex-body">
+        <div class="flex-row"><span class="label">ทองคำแท่ง 96.5%</span><span class="price">46,900 บ.</span></div>
+        <div class="flex-row"><span class="label">ทองคำแท่ง 99.99%</span><span class="price">48,500 บ.</span></div>
+        <div class="flex-row"><span class="label">ทองรูปพรรณ</span><span class="price">43,500 บ.</span></div>
+        <div class="flex-sep"></div>
+        <div class="flex-hint">เลือกประเภททองคำที่ต้องการสั่งซื้อ</div>
+      </div>
+      <div class="flex-footer">
+        <button class="btn-primary" onclick="sendMsg('สั่งซื้อ ทองแท่ง')">ทองแท่ง</button>
+        <button class="btn-secondary" onclick="sendMsg('สั่งซื้อ รูปพรรณ')">รูปพรรณ</button>
+      </div>
+    </div>`
+  chatBody.appendChild(row)
+  scrollBottom()
+}
+
+function addTemplateButtons() {
+  const row = document.createElement('div')
+  row.className = 'msg-row bot'
+  row.innerHTML = `
+    <div class="tpl-card">
+      <img class="tpl-img" src="/static/gold-price.png" alt="gold">
+      <div class="tpl-title">แผนผ่อนทองคำ</div>
+      <div class="tpl-text">เลือกแผนผ่อนชำระที่เหมาะสม</div>
+      <div class="tpl-actions">
+        <button onclick="sendMsg('เลือกผ่อน 3 เดือน')">ผ่อน 3 เดือน</button>
+        <button onclick="sendMsg('เลือกผ่อน 6 เดือน')">ผ่อน 6 เดือน</button>
+        <button onclick="sendMsg('เลือกผ่อน 12 เดือน')">ผ่อน 12 เดือน</button>
+        <button onclick="window.open('https://liff.line.me/2010700498-S81OqCge','_blank')">ดูรายละเอียดเพิ่มเติม</button>
+      </div>
+    </div>`
+  chatBody.appendChild(row)
+  scrollBottom()
+}
+
+function addImagemap() {
+  const row = document.createElement('div')
+  row.className = 'msg-row bot'
+  row.innerHTML = `
+    <div class="imagemap-wrap">
+      <img src="/static/imagemap.png" alt="ออมทอง">
+      <div class="imagemap-overlay">
+        <div class="imagemap-area" onclick="sendMsg('ออมทอง 10 กรัม')"></div>
+        <div class="imagemap-area" onclick="sendMsg('ออมทอง 50 กรัม')"></div>
+        <div class="imagemap-area" onclick="sendMsg('ออมทอง 100 กรัม')"></div>
+        <div class="imagemap-area" onclick="window.open('https://liff.line.me/2010700498-S81OqCge','_blank')"></div>
+      </div>
+    </div>`
+  chatBody.appendChild(row)
+  scrollBottom()
+}
+
+function addCarousel() {
+  const row = document.createElement('div')
+  row.className = 'msg-row bot'
+  const cards = [
+    { title: 'ทองแท่ง 96.5%', sell: '46,900', buy: '45,900' },
+    { title: 'ทองแท่ง 99.99%', sell: '48,500', buy: '47,500' },
+    { title: 'ทองรูปพรรณ', sell: '43,500', buy: '41,500' },
+  ]
+  row.innerHTML = `
+    <div class="carousel-wrap">
+      ${cards.map(c => `
+        <div class="carousel-card">
+          <div class="carousel-header"><h3>${c.title}</h3></div>
+          <div class="carousel-body">
+            <div class="carousel-row"><span class="lbl">ขาย</span><span class="val">${c.sell}</span></div>
+            <div class="carousel-row"><span class="lbl">รับซื้อ</span><span class="val" style="color:#666">${c.buy}</span></div>
+          </div>
+          <div class="carousel-footer"><button onclick="sendMsg('สนใจ ${c.title}')">สนใจ</button></div>
+        </div>`).join('')}
+    </div>`
+  chatBody.appendChild(row)
+  scrollBottom()
+}
+
+function sendMsg(text) {
+  addUserMsg(text)
+  setTimeout(() => {
+    if (text === 'ราคาทอง') {
+      addCarousel()
+    } else if (text === 'ซื้อทอง') {
+      addFlexBubble()
+    } else if (text === 'ผ่อนทอง') {
+      addTemplateButtons()
+    } else if (text === 'ออมทอง') {
+      addImagemap()
+    } else if (text.startsWith('สั่งซื้อ') || text.startsWith('เลือกผ่อน') || text.startsWith('ออมทอง ') || text.startsWith('สนใจ')) {
+      addBotMsg('ได้รับคำสั่งซื้อแล้วครับ เจ้าหน้าที่จะติดต่อกลับโดยเร็วที่สุด')
+    }
+  }, 500)
+}
+</script>
+</body>
+</html>
